@@ -2,7 +2,7 @@ from time import perf_counter_ns
 from random import randrange
 import matplotlib.pyplot as plotter
 from datetime import datetime
-
+from sys import setrecursionlimit
 
 class SortingAlgorithms:
     def __init__(self):
@@ -93,6 +93,78 @@ class SortingAlgorithms:
         data = self.indata
         self.outdata = []
         do_merge(data)
+        self.outdata = data
+
+    def quicksort_rec(self, pivot: float = 1.0):
+        def partition(array, low, high):
+            pivot = array[high]
+            i = low - 1
+            for j in range(low, high):
+                if array[j] <= pivot:
+                    i += 1
+                    array[i], array[j] = array[j], array[i]
+            array[i + 1], array[high] = array[high], array[i + 1]
+            return i + 1
+
+        def quick_sort_recursive(d, start, end):
+            if start < end:
+                pi = partition(d, start, end)
+                quick_sort_recursive(d, start, pi - 1)
+                quick_sort_recursive(d, pi + 1, end)
+
+        assert type(pivot) is float
+        assert 1 >= pivot >= 0
+
+        data = self.indata
+        self.outdata = []
+        quick_sort_recursive(data, 0, round(len(data) * pivot) - 1)
+        self.outdata = data
+
+    def quicksort_iter(self, pivot: float = 1.0):
+        def partition(array, low, high):
+            i = (low - 1)
+            x = array[high]
+
+            for j in range(low, high):
+                if array[j] <= x:
+                    i += 1
+                    array[i], array[j] = array[j], array[i]
+
+            array[i + 1], array[high] = array[high], array[i + 1]
+            return i + 1
+
+        def quick_sort_iterative(array, low, high):
+            size = high - low + 1
+            stack = [0] * size
+
+            top = 0
+            stack[top] = low
+            top = 1
+            stack[top] = high
+
+            while top >= 0:
+                high = stack[top]
+                top -= 1
+                low = stack[top]
+                top -= 1
+                p = partition(array, low, high)
+                if p - 1 > low:
+                    top += 1
+                    stack[top] = low
+                    top += 1
+                    stack[top] = p - 1
+                if p + 1 < high:
+                    top += 1
+                    stack[top] = p + 1
+                    top += 1
+                    stack[top] = high
+
+        assert type(pivot) is float
+        assert 1 >= pivot >= 0
+
+        data = self.indata
+        self.outdata = []
+        quick_sort_iterative(data, 0, round(len(data) * pivot) - 1)
         self.outdata = data
 
 
@@ -189,6 +261,8 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
         self.SS_perf = []
         self.HS_perf = []
         self.MS_perf = []
+        self.QSI_perf = []
+        self.QSR_perf = []
 
     def load_param_from_file(self, filename=None):
         if filename is None:
@@ -235,7 +309,7 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
     def measure_insertion_sort_performance(self):
         self.IS_perf = []
-        print(f"executing insertion sort measurements")
+        print(f"performing insertion sort measurements")
         for dataset in range(int(self.parameters[0])):
             print(f"dataset: {dataset}")
             avg_time_ms = []
@@ -258,7 +332,7 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
     def measure_selection_sort_performance(self):
         self.SS_perf = []
-        print(f"executing selection sort measurements")
+        print(f"performing selection sort measurements")
         for dataset in range(int(self.parameters[0])):
             print(f"dataset: {dataset}")
             avg_time_ms = []
@@ -281,7 +355,7 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
     def measure_heapsort_performance(self):
         self.HS_perf = []
-        print(f"executing heapsort measurements")
+        print(f"performing heapsort measurements")
         for dataset in range(int(self.parameters[0])):
             print(f"dataset: {dataset}")
             avg_time_ms = []
@@ -304,7 +378,7 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
     def measure_merge_sort_performance(self):
         self.MS_perf = []
-        print(f"executing merge sort measurements")
+        print(f"performing merge sort measurements")
         for dataset in range(int(self.parameters[0])):
             print(f"dataset: {dataset}")
             avg_time_ms = []
@@ -324,6 +398,44 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
                 print(f"merge sort elapsed time: {avg} ms for {ds[i]} dataset type")
                 avg_time_ms.append(avg)
             self.MS_perf.append(avg_time_ms)
+
+    def measure_quicksort_iterative(self, pivot: float = 0):
+        assert type(pivot) is float
+        assert 1 >= pivot >= 0
+        self.QSI_perf = []
+        print(f"performing quicksort iterative measurements")
+        for dataset in range(int(self.parameters[0])):
+            print(f"dataset: {dataset}")
+            time = 0
+            for _ in range(5):
+                print(f"round: {_}")
+                self.indata = self.ashape[dataset]
+                tstart = perf_counter_ns()
+                self.quicksort_iter(pivot)
+                tstop = perf_counter_ns()
+                time += (tstop - tstart)
+            avg = round(time / 5000)
+            print(f"quicksort iterative elapsed time: {avg} ms for a-shaped dataset type for pivot={pivot}")
+            self.QSI_perf.append(avg)
+
+    def measure_quicksort_recursive(self, pivot: float = 0):
+        assert type(pivot) is float
+        assert 1 >= pivot >= 0
+        self.QSR_perf = []
+        print(f"performing merge sort measurements")
+        for dataset in range(int(self.parameters[0])):
+            print(f"dataset: {dataset}")
+            time = 0
+            for _ in range(5):
+                print(f"round: {_}")
+                self.indata = self.ashape[dataset]
+                tstart = perf_counter_ns()
+                self.quicksort_rec(pivot)
+                tstop = perf_counter_ns()
+                time += (tstop - tstart)
+            avg = round(time / 5000)
+            print(f"quicksort recursive elapsed time: {avg} ms for a-shaped dataset type for pivot={pivot}")
+            self.QSR_perf.append(avg)
 
 
 if __name__ == "__main__":
@@ -451,6 +563,70 @@ if __name__ == "__main__":
 
     try:
         plotter.savefig(f"VS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+    except FileExistsError:
+        pass
+
+    plotter.close(None)
+
+    sortperf.measure_quicksort_iterative(pivot=1.0)
+
+    right_pivot = sortperf.QSI_perf
+
+    sortperf.measure_quicksort_iterative(pivot=0.5)
+
+    mid_pivot = sortperf.QSI_perf
+
+    sortperf.measure_quicksort_iterative(pivot=(randrange(0, 11)/10))
+
+    rnd_pivot = sortperf.QSI_perf
+
+    plotter.plot(list(sortperf.dataset_sizes), list(right_pivot), color="r", label="right pivot")
+    plotter.plot(list(sortperf.dataset_sizes), list(mid_pivot), color="g", label="middle pivot")
+    plotter.plot(list(sortperf.dataset_sizes), list(rnd_pivot), color="b", label="random pivot")
+
+    plotter.xlabel("dataset size")
+    plotter.ylabel("time [ms]")
+    plotter.yscale("log")
+    plotter.title("Quicksort iterative")
+
+    plotter.legend()
+
+    try:
+        plotter.savefig(f"QSI_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+    except FileExistsError:
+        pass
+
+    plotter.close(None)
+
+    setrecursionlimit(10000)
+
+    sortperf.measure_quicksort_recursive(pivot=1.0)
+
+    right_pivot = sortperf.QSR_perf
+
+    sortperf.measure_quicksort_recursive(pivot=0.5)
+
+    mid_pivot = sortperf.QSR_perf
+
+    sortperf.measure_quicksort_recursive(pivot=(randrange(0, 11)/10))
+
+    setrecursionlimit(1000)
+
+    rnd_pivot = sortperf.QSI_perf
+
+    plotter.plot(list(sortperf.dataset_sizes), list(right_pivot), color="r", label="right pivot")
+    plotter.plot(list(sortperf.dataset_sizes), list(mid_pivot), color="g", label="middle pivot")
+    plotter.plot(list(sortperf.dataset_sizes), list(rnd_pivot), color="b", label="random pivot")
+
+    plotter.xlabel("dataset size")
+    plotter.ylabel("time [ms]")
+    plotter.yscale("log")
+    plotter.title("Quicksort recursive")
+
+    plotter.legend()
+
+    try:
+        plotter.savefig(f"QSR_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
     except FileExistsError:
         pass
 
