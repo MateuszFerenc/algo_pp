@@ -3,7 +3,8 @@ from random import randrange
 import matplotlib.pyplot as plotter
 from datetime import datetime
 from sys import setrecursionlimit
-
+from os.path import join as pjoin
+from os import mkdir
 
 class SortingAlgorithms:
     def __init__(self):
@@ -448,6 +449,11 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
 
 if __name__ == "__main__":
+    results_dir = "results"
+    try:
+        mkdir(results_dir)
+    except FileExistsError:
+        pass
     sortperf = SortPerformance()
     sortperf.load_param_from_file("algo1")
     # sortperf.load_param_from_file("algo1_bigdata")
@@ -496,8 +502,11 @@ if __name__ == "__main__":
 
     plotter.legend()
 
+    file_name = f"IS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
+    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+
     try:
-        plotter.savefig(f"IS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+        plotter.savefig(save_path)
     except FileExistsError:
         pass
 
@@ -516,8 +525,11 @@ if __name__ == "__main__":
 
     plotter.legend()
 
+    file_name = f"SS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
+    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+
     try:
-        plotter.savefig(f"SS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+        plotter.savefig(save_path)
     except FileExistsError:
         pass
 
@@ -536,8 +548,11 @@ if __name__ == "__main__":
 
     plotter.legend()
 
+    file_name = f"HS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
+    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+
     try:
-        plotter.savefig(f"HS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+        plotter.savefig(save_path)
     except FileExistsError:
         pass
 
@@ -556,8 +571,11 @@ if __name__ == "__main__":
 
     plotter.legend()
 
+    file_name = f"MS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
+    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+
     try:
-        plotter.savefig(f"MS_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+        plotter.savefig(save_path)
     except FileExistsError:
         pass
 
@@ -589,8 +607,11 @@ if __name__ == "__main__":
 
     plotter.legend()
 
+    file_name = f"QSI_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
+    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+
     try:
-        plotter.savefig(f"QSI_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+        plotter.savefig(save_path)
     except FileExistsError:
         pass
 
@@ -623,8 +644,11 @@ if __name__ == "__main__":
 
     plotter.legend()
 
+    file_name = f"QSR_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
+    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+
     try:
-        plotter.savefig(f"QSR_plot_{sortperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png")
+        plotter.savefig(save_path)
     except FileExistsError:
         pass
 
