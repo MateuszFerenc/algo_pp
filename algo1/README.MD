@@ -18,11 +18,11 @@ example graphs:<br><br>
 
 # create virtual environment, met requirements and run (UNIX)
 ```bash
-git clone https://github.com/mferenc/algo_pp
+git clone https://github.com/mateuszferenc/algo_pp
 cd algo_pp/algo1
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 
-./algo1.py
+python3 algo1.py
 ```

@@ -6,6 +6,7 @@ from sys import setrecursionlimit
 from os.path import join as pjoin
 from os import mkdir
 
+
 class SortingAlgorithms:
     def __init__(self):
         self.indata = []
@@ -305,93 +306,89 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
     def measure_insertion_sort_performance(self):
         self.IS_perf = []
-        print(f"performing insertion sort measurements")
         for dataset in range(int(self.parameters[0])):
-            print(f"dataset: {dataset}")
             avg_time_ms = []
             ds = ("random", "ascending", "declining", "constant", "vshape")
             for i, d in enumerate(
                     (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
                 time = 0
-                print(f"dataset type: {ds[i]}")
                 for _ in range(5):
-                    print(f"round: {_}")
                     self.indata = d
+                    print(
+                        f"Performing insertion sort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
+                        f"data type\t\t\t",
+                        end="\r")
                     tstart = perf_counter_ns()
                     self.insertion_sort()
                     tstop = perf_counter_ns()
                     time += (tstop - tstart)
                 avg = round(time / 5000)
-                print(f"insertion sort elapsed time: {avg} ms for {ds[i]} dataset type")
                 avg_time_ms.append(avg)
             self.IS_perf.append(avg_time_ms)
 
     def measure_selection_sort_performance(self):
         self.SS_perf = []
-        print(f"performing selection sort measurements")
         for dataset in range(int(self.parameters[0])):
-            print(f"dataset: {dataset}")
             avg_time_ms = []
             ds = ("random", "ascending", "declining", "constant", "vshape")
             for i, d in enumerate(
                     (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
                 time = 0
-                print(f"dataset type: {ds[i]}")
                 for _ in range(5):
-                    print(f"round: {_}")
                     self.indata = d
+                    print(
+                        f"Performing selection sort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
+                        f"data type\t\t\t",
+                        end="\r")
                     tstart = perf_counter_ns()
                     self.selection_sort()
                     tstop = perf_counter_ns()
                     time += (tstop - tstart)
                 avg = round(time / 5000)
-                print(f"selection sort elapsed time: {avg} ms for {ds[i]} dataset type")
                 avg_time_ms.append(avg)
             self.SS_perf.append(avg_time_ms)
 
     def measure_heapsort_performance(self):
         self.HS_perf = []
-        print(f"performing heapsort measurements")
         for dataset in range(int(self.parameters[0])):
-            print(f"dataset: {dataset}")
             avg_time_ms = []
             ds = ("random", "ascending", "declining", "constant", "vshape")
             for i, d in enumerate(
                     (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
                 time = 0
-                print(f"dataset type: {ds[i]}")
                 for _ in range(5):
-                    print(f"round: {_}")
                     self.indata = d
+                    print(
+                        f"Performing heapsort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
+                        f"data type\t\t\t",
+                        end="\r")
                     tstart = perf_counter_ns()
                     self.heapsort()
                     tstop = perf_counter_ns()
                     time += (tstop - tstart)
                 avg = round(time / 5000)
-                print(f"heapsort elapsed time: {avg} ms for {ds[i]} dataset type")
                 avg_time_ms.append(avg)
             self.HS_perf.append(avg_time_ms)
 
     def measure_merge_sort_performance(self):
         self.MS_perf = []
-        print(f"performing merge sort measurements")
         for dataset in range(int(self.parameters[0])):
-            print(f"dataset: {dataset}")
             avg_time_ms = []
             ds = ("random", "ascending", "declining", "constant", "vshape")
             for i, d in enumerate(
                     (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
                 time = 0
-                print(f"dataset type: {ds[i]}")
                 for _ in range(5):
-                    print(f"round: {_}")
                     self.indata = d
+                    print(
+                        f"Performing merge sort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
+                        f"data type\t\t\t",
+                        end="\r")
                     tstart = perf_counter_ns()
                     self.merge_sort()
                     tstop = perf_counter_ns()
                     time += (tstop - tstart)
                 avg = round(time / 5000)
-                print(f"merge sort elapsed time: {avg} ms for {ds[i]} dataset type")
                 avg_time_ms.append(avg)
             self.MS_perf.append(avg_time_ms)
 
@@ -399,13 +396,9 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
         assert type(pivot) is str
         assert pivot in ("right", "middle", "random")
         self.QSI_perf = []
-        print(f"performing quicksort iterative measurements")
         for dataset in range(int(self.parameters[0])):
-            print(f"dataset: {dataset}")
             time = 0
-            p = 0
             for _ in range(5):
-                print(f"round: {_}")
                 self.indata = self.ashape[dataset]
                 if pivot == "right":
                     p = len(self.indata)
@@ -413,25 +406,24 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
                     p = len(self.indata) // 2
                 else:
                     p = randrange(0, len(self.indata) + 1)
+                print(
+                    f"Performing quicksort iterative measurements - dataset: {dataset} of ashape "
+                    f"data type - round: {_} - pivot={p} {pivot}\t",
+                    end="\r")
                 tstart = perf_counter_ns()
                 self.quicksort_iter(p)
                 tstop = perf_counter_ns()
                 time += (tstop - tstart)
             avg = round(time / 5000)
-            print(f"quicksort iterative elapsed time: {avg} ms for a-shaped dataset type for pivot={p}")
             self.QSI_perf.append(avg)
 
     def measure_quicksort_recursive(self, pivot: str = "right"):
         assert type(pivot) is str
         assert pivot in ("right", "middle", "random")
         self.QSR_perf = []
-        print(f"performing merge sort measurements")
         for dataset in range(int(self.parameters[0])):
-            print(f"dataset: {dataset}")
             time = 0
-            p = 0
             for _ in range(5):
-                print(f"round: {_}")
                 self.indata = self.ashape[dataset]
                 if pivot == "right":
                     p = len(self.indata)
@@ -439,12 +431,15 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
                     p = len(self.indata) // 2
                 else:
                     p = randrange(0, len(self.indata) + 1)
+                print(
+                    f"Performing quicksort recursive measurements - dataset: {dataset} of ashape "
+                    f"data type - round: {_} - pivot={p} {pivot}\t",
+                    end="\r")
                 tstart = perf_counter_ns()
                 self.quicksort_rec(p)
                 tstop = perf_counter_ns()
                 time += (tstop - tstart)
             avg = round(time / 5000)
-            print(f"quicksort recursive elapsed time: {avg} ms for a-shaped dataset type for pivot={p}")
             self.QSR_perf.append(avg)
 
 
