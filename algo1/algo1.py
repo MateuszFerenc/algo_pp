@@ -175,7 +175,7 @@ class DataGenerators:
         assert recurring.upper() in ["Y", "YES", "N", "NO"]
         nums = []
         for _ in range(amount):
-            if recurring.upper() in ("N", "NO") and abs(_max - _min) > amount:
+            if recurring.upper() in ("N", "NO") and abs(_max - _min) >= amount:
                 while True:
                     r = randrange(_min, _max + 1)
                     if r not in nums:
@@ -254,12 +254,6 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
         self.ashape = []
         self.vshape = []
         self.dataset_sizes = []
-        self.IS_perf = []
-        self.SS_perf = []
-        self.HS_perf = []
-        self.MS_perf = []
-        self.QSI_perf = []
-        self.QSR_perf = []
 
     def load_param_from_file(self, filename=None):
         if filename is None:
@@ -304,98 +298,36 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
             self.vshape.append(self.v_shape_list(int(self.parameters[1 + idx])))
             self.dataset_sizes.append(int(self.parameters[1 + idx]))
 
-    def measure_insertion_sort_performance(self):
-        self.IS_perf = []
-        for dataset in range(int(self.parameters[0])):
+    def measure_performance(self, sorting_algo: str):
+        assert type(sorting_algo) is str
+        assert sorting_algo in ("insertion_sort", "selection_sort", "heapsort", "merge_sort") 
+        perf = []
+        ds = ("random", "ascending", "declining", "constant", "vshape")
+        for i, d in enumerate((self.rnd, self.asc, self.dec, self.con, self.vshape)):
             avg_time_ms = []
-            ds = ("random", "ascending", "declining", "constant", "vshape")
-            for i, d in enumerate(
-                    (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
+            for dataset in range(int(self.parameters[0])):
                 time = 0
                 for _ in range(5):
-                    self.indata = d
-                    print(
-                        f"Performing insertion sort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
-                        f"data type\t\t\t",
-                        end="\r")
+                    self.indata = d[dataset]
+                    text = f"Performing {sorting_algo} measurements - round: {_} - dataset: {dataset} of {ds[i]} data type"
+                    print(end='\x1b[2K')
+                    print(text, end="\r")
                     tstart = perf_counter_ns()
-                    self.insertion_sort()
+                    a = getattr(self, sorting_algo)
+                    a()
                     tstop = perf_counter_ns()
                     time += (tstop - tstart)
                 avg = round(time / 5000)
                 avg_time_ms.append(avg)
-            self.IS_perf.append(avg_time_ms)
-
-    def measure_selection_sort_performance(self):
-        self.SS_perf = []
-        for dataset in range(int(self.parameters[0])):
-            avg_time_ms = []
-            ds = ("random", "ascending", "declining", "constant", "vshape")
-            for i, d in enumerate(
-                    (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
-                time = 0
-                for _ in range(5):
-                    self.indata = d
-                    print(
-                        f"Performing selection sort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
-                        f"data type\t\t\t",
-                        end="\r")
-                    tstart = perf_counter_ns()
-                    self.selection_sort()
-                    tstop = perf_counter_ns()
-                    time += (tstop - tstart)
-                avg = round(time / 5000)
-                avg_time_ms.append(avg)
-            self.SS_perf.append(avg_time_ms)
-
-    def measure_heapsort_performance(self):
-        self.HS_perf = []
-        for dataset in range(int(self.parameters[0])):
-            avg_time_ms = []
-            ds = ("random", "ascending", "declining", "constant", "vshape")
-            for i, d in enumerate(
-                    (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
-                time = 0
-                for _ in range(5):
-                    self.indata = d
-                    print(
-                        f"Performing heapsort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
-                        f"data type\t\t\t",
-                        end="\r")
-                    tstart = perf_counter_ns()
-                    self.heapsort()
-                    tstop = perf_counter_ns()
-                    time += (tstop - tstart)
-                avg = round(time / 5000)
-                avg_time_ms.append(avg)
-            self.HS_perf.append(avg_time_ms)
-
-    def measure_merge_sort_performance(self):
-        self.MS_perf = []
-        for dataset in range(int(self.parameters[0])):
-            avg_time_ms = []
-            ds = ("random", "ascending", "declining", "constant", "vshape")
-            for i, d in enumerate(
-                    (self.rnd[dataset], self.asc[dataset], self.dec[dataset], self.con[dataset], self.vshape[dataset])):
-                time = 0
-                for _ in range(5):
-                    self.indata = d
-                    print(
-                        f"Performing merge sort measurements - round: {_} - dataset: {dataset} of {ds[i]}"
-                        f"data type\t\t\t",
-                        end="\r")
-                    tstart = perf_counter_ns()
-                    self.merge_sort()
-                    tstop = perf_counter_ns()
-                    time += (tstop - tstart)
-                avg = round(time / 5000)
-                avg_time_ms.append(avg)
-            self.MS_perf.append(avg_time_ms)
-
-    def measure_quicksort_iterative(self, pivot: str = "right"):
+            perf.append(avg_time_ms)
+        return perf
+            
+    def measure_quicksort_performance(self, sorting_algo: str, pivot: str = "right"):
+        assert type(sorting_algo) is str
+        assert sorting_algo in ("quicksort_rec", "quicksort_iter")
         assert type(pivot) is str
         assert pivot in ("right", "middle", "random")
-        self.QSI_perf = []
+        perf = []
         for dataset in range(int(self.parameters[0])):
             time = 0
             for _ in range(5):
@@ -406,41 +338,17 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
                     p = len(self.indata) // 2
                 else:
                     p = randrange(0, len(self.indata) + 1)
-                print(
-                    f"Performing quicksort iterative measurements - dataset: {dataset} of ashape "
-                    f"data type - round: {_} - pivot={p} {pivot}\t",
-                    end="\r")
+                text = f"Performing {sorting_algo} measurements - dataset: {dataset} of ashape data type - round: {_} - pivot={p} {pivot}"
+                print(end='\x1b[2K')
+                print(text, end="\r")
                 tstart = perf_counter_ns()
-                self.quicksort_iter(p)
+                a = getattr(self, sorting_algo)
+                a(p)
                 tstop = perf_counter_ns()
                 time += (tstop - tstart)
             avg = round(time / 5000)
-            self.QSI_perf.append(avg)
-
-    def measure_quicksort_recursive(self, pivot: str = "right"):
-        assert type(pivot) is str
-        assert pivot in ("right", "middle", "random")
-        self.QSR_perf = []
-        for dataset in range(int(self.parameters[0])):
-            time = 0
-            for _ in range(5):
-                self.indata = self.ashape[dataset]
-                if pivot == "right":
-                    p = len(self.indata)
-                elif pivot == "middle":
-                    p = len(self.indata) // 2
-                else:
-                    p = randrange(0, len(self.indata) + 1)
-                print(
-                    f"Performing quicksort recursive measurements - dataset: {dataset} of ashape "
-                    f"data type - round: {_} - pivot={p} {pivot}\t",
-                    end="\r")
-                tstart = perf_counter_ns()
-                self.quicksort_rec(p)
-                tstop = perf_counter_ns()
-                time += (tstop - tstart)
-            avg = round(time / 5000)
-            self.QSR_perf.append(avg)
+            perf.append(avg)
+        return perf
 
 
 if __name__ == "__main__":
@@ -455,40 +363,16 @@ if __name__ == "__main__":
     sortperf.process_parameters()
     now_time = datetime.now()
 
-    sortperf.measure_insertion_sort_performance()
-    sortperf.measure_selection_sort_performance()
-    sortperf.measure_heapsort_performance()
-    sortperf.measure_merge_sort_performance()
+    IS_perf = sortperf.measure_performance("insertion_sort")
+    SS_perf = sortperf.measure_performance("selection_sort")
+    HS_perf = sortperf.measure_performance("heapsort")
+    MS_perf = sortperf.measure_performance("merge_sort")
 
-    IS_rnd = (i[0] for i in sortperf.IS_perf)
-    IS_asc = (i[1] for i in sortperf.IS_perf)
-    IS_dec = (i[2] for i in sortperf.IS_perf)
-    IS_con = (i[3] for i in sortperf.IS_perf)
-    IS_vs = (i[4] for i in sortperf.IS_perf)
-
-    SS_rnd = (i[0] for i in sortperf.SS_perf)
-    SS_asc = (i[1] for i in sortperf.SS_perf)
-    SS_dec = (i[2] for i in sortperf.SS_perf)
-    SS_con = (i[3] for i in sortperf.SS_perf)
-    SS_vs = (i[4] for i in sortperf.SS_perf)
-
-    HS_rnd = (i[0] for i in sortperf.HS_perf)
-    HS_asc = (i[1] for i in sortperf.HS_perf)
-    HS_dec = (i[2] for i in sortperf.HS_perf)
-    HS_con = (i[3] for i in sortperf.HS_perf)
-    HS_vs = (i[4] for i in sortperf.HS_perf)
-
-    MS_rnd = (i[0] for i in sortperf.MS_perf)
-    MS_asc = (i[1] for i in sortperf.MS_perf)
-    MS_dec = (i[2] for i in sortperf.MS_perf)
-    MS_con = (i[3] for i in sortperf.MS_perf)
-    MS_vs = (i[4] for i in sortperf.MS_perf)
-
-    plotter.plot(list(sortperf.dataset_sizes), list(IS_rnd), color="r", label="random")
-    plotter.plot(list(sortperf.dataset_sizes), list(IS_asc), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(IS_dec), color="b", label="declining")
-    plotter.plot(list(sortperf.dataset_sizes), list(IS_con), color="k", label="constant")
-    plotter.plot(list(sortperf.dataset_sizes), list(IS_vs), color="c", label="V-shaped")
+    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[0]), color="r", label="random")
+    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[1]), color="g", label="ascending")
+    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[3]), color="k", label="constant")
+    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[4]), color="c", label="V-shaped")
 
     plotter.xlabel("dataset size")
     plotter.ylabel("time [ms]")
@@ -507,11 +391,11 @@ if __name__ == "__main__":
 
     plotter.close(None)
 
-    plotter.plot(list(sortperf.dataset_sizes), list(SS_rnd), color="r", label="random")
-    plotter.plot(list(sortperf.dataset_sizes), list(SS_asc), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(SS_dec), color="b", label="declining")
-    plotter.plot(list(sortperf.dataset_sizes), list(SS_con), color="k", label="constant")
-    plotter.plot(list(sortperf.dataset_sizes), list(SS_vs), color="c", label="V-shaped")
+    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[0]), color="r", label="random")
+    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[1]), color="g", label="ascending")
+    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[3]), color="k", label="constant")
+    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[4]), color="c", label="V-shaped")
 
     plotter.xlabel("dataset size")
     plotter.ylabel("time [ms]")
@@ -530,11 +414,11 @@ if __name__ == "__main__":
 
     plotter.close(None)
 
-    plotter.plot(list(sortperf.dataset_sizes), list(HS_rnd), color="r", label="random")
-    plotter.plot(list(sortperf.dataset_sizes), list(HS_asc), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(HS_dec), color="b", label="declining")
-    plotter.plot(list(sortperf.dataset_sizes), list(HS_con), color="k", label="constant")
-    plotter.plot(list(sortperf.dataset_sizes), list(HS_vs), color="c", label="V-shaped")
+    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[0]), color="r", label="random")
+    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[1]), color="g", label="ascending")
+    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[3]), color="k", label="constant")
+    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[4]), color="c", label="V-shaped")
 
     plotter.xlabel("dataset size")
     plotter.ylabel("time [ms]")
@@ -553,11 +437,11 @@ if __name__ == "__main__":
 
     plotter.close(None)
 
-    plotter.plot(list(sortperf.dataset_sizes), list(MS_rnd), color="r", label="random")
-    plotter.plot(list(sortperf.dataset_sizes), list(MS_asc), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(MS_dec), color="b", label="declining")
-    plotter.plot(list(sortperf.dataset_sizes), list(MS_con), color="k", label="constant")
-    plotter.plot(list(sortperf.dataset_sizes), list(MS_vs), color="c", label="V-shaped")
+    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[0]), color="r", label="random")
+    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[1]), color="g", label="ascending")
+    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[3]), color="k", label="constant")
+    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[4]), color="c", label="V-shaped")
 
     plotter.xlabel("dataset size")
     plotter.ylabel("time [ms]")
@@ -579,17 +463,11 @@ if __name__ == "__main__":
     sortperf.load_param_from_file("algo1_QS_DATA")
     sortperf.process_parameters()
 
-    sortperf.measure_quicksort_iterative(pivot="right")
+    right_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="right")
 
-    right_pivot = sortperf.QSI_perf
+    mid_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="middle")
 
-    sortperf.measure_quicksort_iterative(pivot="middle")
-
-    mid_pivot = sortperf.QSI_perf
-
-    sortperf.measure_quicksort_iterative(pivot="random")
-
-    rnd_pivot = sortperf.QSI_perf
+    rnd_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="random")
 
     plotter.plot(list(sortperf.dataset_sizes), list(right_pivot), color="r", label="right pivot")
     plotter.plot(list(sortperf.dataset_sizes), list(mid_pivot), color="g", label="middle pivot")
@@ -614,19 +492,13 @@ if __name__ == "__main__":
 
     setrecursionlimit(10000)
 
-    sortperf.measure_quicksort_recursive(pivot="right")
+    right_pivot = sortperf.measure_quicksort_performance("quicksort_rec", pivot="right")
 
-    right_pivot = sortperf.QSR_perf
+    mid_pivot = sortperf.measure_quicksort_performance("quicksort_rec", pivot="middle")
 
-    sortperf.measure_quicksort_recursive(pivot="middle")
-
-    mid_pivot = sortperf.QSR_perf
-
-    sortperf.measure_quicksort_recursive(pivot="random")
+    rnd_pivot = sortperf.measure_quicksort_performance("quicksort_rec", pivot="random")
 
     setrecursionlimit(1000)
-
-    rnd_pivot = sortperf.QSI_perf
 
     plotter.plot(list(sortperf.dataset_sizes), list(right_pivot), color="r", label="right pivot")
     plotter.plot(list(sortperf.dataset_sizes), list(mid_pivot), color="g", label="middle pivot")
