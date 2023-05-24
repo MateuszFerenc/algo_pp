@@ -1,3 +1,4 @@
+#! venv/bin/python3
 import numpy as np
 import random
 from time import perf_counter_ns
@@ -65,6 +66,7 @@ class DataGenerators:
                 vertice0 = random.randint(0, num_vertices - 1)
                 vertice1 = random.randint(0, num_vertices - 1)
 
+				# avoid connecting yet connected vertices
                 if incidence_matrix[vertice0, vertice1] == 1 or vertice0 == vertice1 or vertices_grades[vertice0] == minimum_vertices_grades or vertices_grades[vertice1] == minimum_vertices_grades:
                     continue
 
@@ -246,7 +248,7 @@ class FindingPerformance(DataGenerators, Algorithms):
     def process_parameters(self):
         if len(self.parameters):
             for idx in range(int(self.parameters[0])):
-                self.sizes.append(int(self.parameters[idx]))
+                self.sizes.append(int(self.parameters[idx + 1]))
         else:
             print("Before processing parameters, you should load the data.\t\tAborting...")
             abort()
@@ -269,7 +271,7 @@ class FindingPerformance(DataGenerators, Algorithms):
                     empty = a(circle_graph)
                     tstop = perf_counter_ns()
                     time += (tstop - tstart)
-                avg = round(time / 5000)
+                avg = round(time / 5000000)
                 perf[algo].append(avg)
         print(end='\x1b[2K')
         return perf
@@ -291,7 +293,7 @@ class FindingPerformance(DataGenerators, Algorithms):
                 empty = Algorithms.find_all_hamiltonian_cycles(circle_graph)
                 tstop = perf_counter_ns()
                 time += (tstop - tstart)
-            avg = round(time / 5000)
+            avg = round(time / 5000000)
             perf.append(avg)
             circuits.append(empty)
         print(end='\x1b[2K')
@@ -324,9 +326,10 @@ if __name__ == "__main__":
     plotter.plot(list(findperf.sizes), list(euler_performance), color="r", label="find_euler_cycle")
     plotter.plot(list(findperf.sizes), list(hamiltonian_performance), color="g", label="find_hamiltonian_cycle")
     
-    plotter.xlabel("graph size [n]")
-    plotter.ylabel("time [ms]")
-    plotter.title("Graph saturation 30%")
+    plotter.xlabel("graph size [n]", weight='light', style='italic')
+    plotter.ylabel("time [s]", weight='light', style='italic')
+    plotter.title("Graph saturation 30%", weight='bold')
+    plotter.grid('on', linestyle=':', linewidth=0.5)
 
     plotter.legend()
 
@@ -347,9 +350,10 @@ if __name__ == "__main__":
     plotter.plot(list(findperf.sizes), list(euler_performance), color="r", label="find_euler_cycle")
     plotter.plot(list(findperf.sizes), list(hamiltonian_performance), color="g", label="find_hamiltonian_cycle")
     
-    plotter.xlabel("graph size [n]")
-    plotter.ylabel("time [ms]")
-    plotter.title("Graph saturation 70%")
+    plotter.xlabel("graph size [n]", weight='light', style='italic')
+    plotter.ylabel("time [s]", weight='light', style='italic')
+    plotter.title("Graph saturation 70%", weight='bold')
+    plotter.grid('on', linestyle=':', linewidth=0.5)
 
     plotter.legend()
 
@@ -369,11 +373,12 @@ if __name__ == "__main__":
     task2_50p = findperf.Task2(saturation=50)
     times, cycles = task2_50p[0], task2_50p[1]
     
-    plotter.plot(list(findperf.sizes), list(times), color="g", label="finding all hamiltonian circuits")
+    plotter.plot(list(findperf.sizes), list(times), color="b", label="finding all hamiltonian circuits")
     
-    plotter.xlabel("graph size [n]")
-    plotter.ylabel("time [ms]")
-    plotter.title("Graph saturation 50%")
+    plotter.xlabel("graph size [n]", weight='light', style='italic')
+    plotter.ylabel("time [m]", weight='light', style='italic')
+    plotter.title("Graph saturation 50%", weight='bold')
+    plotter.grid('on', linestyle=':', linewidth=0.5)
 
     plotter.legend()
 
@@ -391,4 +396,4 @@ if __name__ == "__main__":
     with open(save_path, "w") as text_out:
         for i, graph in enumerate(findperf.sizes):
             text_out.write(f"Graph size: {findperf.sizes[i]} with saturation 50 %, Hamiltionian cycles:\n")
-            text_out.write(str(cycles[i]))
+            text_out.write(f"{str(cycles[i])}\n")
