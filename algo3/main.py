@@ -195,6 +195,29 @@ class Algorithms:
             print("No Hamiltonian cycle.")
             return []
         
+    @staticmethod
+    def find_all_hamiltonian_cycles(m):
+        def search(vertice, circuit):
+            nonlocal hamiltonian_cycles
+
+            if len(circuit) == vertices_num:
+                if imatrix[vertice, circuit[0]] == 1:
+                    hamiltonian_cycles.append(circuit + [circuit[0]])
+                return
+
+            for near in range(vertices_num):
+                if imatrix[vertice, near] == 1 and near not in circuit:
+                    search(near, circuit + [near])
+
+        imatrix = np.copy(m)
+        hamiltonian_cycles = []
+        vertices_num = imatrix.shape[1]
+
+        for wierzcholek_startowy in range(vertices_num):
+            search(wierzcholek_startowy, [wierzcholek_startowy])
+
+        return hamiltonian_cycles
+        
 class FindingPerformance(DataGenerators, Algorithms):
     def __init__(self):
         super().__init__()
@@ -248,10 +271,31 @@ class FindingPerformance(DataGenerators, Algorithms):
                     time += (tstop - tstart)
                 avg = round(time / 5000)
                 perf[algo].append(avg)
+        print(end='\x1b[2K')
         return perf
                 
-    def Task2(self):
-        pass
+    def Task2(self, saturation):
+        assert type(saturation) is int
+        assert 0 < saturation <= 100
+        perf = []
+        circuits = []
+        for i in range(int(self.parameters[0])):
+            size = self.sizes[i]
+            circle_graph = DataGenerators.generate_mixed_connected_circle_graph(size, saturation)
+            time = 0
+            for _ in range(5):
+                text = f"Performing Hamiltonian circuits find measurements - round: {_} - graph size: {size} with {saturation} % of saturation"
+                print(end='\x1b[2K')
+                print(text, end="\r")
+                tstart = perf_counter_ns()
+                empty = Algorithms.find_all_hamiltonian_cycles(circle_graph)
+                tstop = perf_counter_ns()
+                time += (tstop - tstart)
+            avg = round(time / 5000)
+            perf.append(avg)
+            circuits.append(empty)
+        print(end='\x1b[2K')
+        return perf, circuits
     
 
 if __name__ == "__main__":
@@ -260,10 +304,18 @@ if __name__ == "__main__":
         mkdir(results_dir)
     except FileExistsError:
         pass
+    
+    now_time = datetime.now().strftime('%H%M_%d%m%y')
+    dir = pjoin(results_dir, f"{now_time}")
+    
+    try:
+        mkdir(dir)
+    except FileExistsError:
+        pass
+    
     findperf = FindingPerformance()
     findperf.load_param_from_file("algo3")
     findperf.process_parameters()
-    now_time = datetime.now()
 
     task1_30p = findperf.Task1(saturation=30)
     euler_performance = task1_30p["find_euler_cycle"]
@@ -274,13 +326,12 @@ if __name__ == "__main__":
     
     plotter.xlabel("graph size [n]")
     plotter.ylabel("time [ms]")
-    plotter.yscale("log")
     plotter.title("Graph saturation 30%")
 
     plotter.legend()
 
-    file_name = f"task1_30p_plot_{findperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
-    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+    file_name = f"task1_30p_plot_{findperf.filename}_{now_time}.png"
+    save_path = pjoin(dir, file_name)
 
     try:
         plotter.savefig(save_path)
@@ -289,22 +340,21 @@ if __name__ == "__main__":
 
     plotter.close(None)
     
-    task1_30p = findperf.Task1(saturation=70)
-    euler_performance = task1_30p["find_euler_cycle"]
-    hamiltonian_performance = task1_30p["find_hamiltonian_cycle"]
+    task1_70p = findperf.Task1(saturation=70)
+    euler_performance = task1_70p["find_euler_cycle"]
+    hamiltonian_performance = task1_70p["find_hamiltonian_cycle"]
     
     plotter.plot(list(findperf.sizes), list(euler_performance), color="r", label="find_euler_cycle")
     plotter.plot(list(findperf.sizes), list(hamiltonian_performance), color="g", label="find_hamiltonian_cycle")
     
     plotter.xlabel("graph size [n]")
     plotter.ylabel("time [ms]")
-    plotter.yscale("log")
     plotter.title("Graph saturation 70%")
 
     plotter.legend()
 
-    file_name = f"task1_70p_plot_{findperf.filename}_{now_time.strftime('%H%M_%d%m%y')}.png"
-    save_path = pjoin(results_dir, file_name) if results_dir is not None else file_name
+    file_name = f"task1_70p_plot_{findperf.filename}_{now_time}.png"
+    save_path = pjoin(dir, file_name)
 
     try:
         plotter.savefig(save_path)
@@ -312,3 +362,33 @@ if __name__ == "__main__":
         pass
 
     plotter.close(None)
+    
+    findperf.load_param_from_file("algo3_hamiltonian_cycles")
+    findperf.process_parameters()
+    
+    task2_50p = findperf.Task2(saturation=50)
+    times, cycles = task2_50p[0], task2_50p[1]
+    
+    plotter.plot(list(findperf.sizes), list(times), color="g", label="finding all hamiltonian circuits")
+    
+    plotter.xlabel("graph size [n]")
+    plotter.ylabel("time [ms]")
+    plotter.title("Graph saturation 50%")
+
+    plotter.legend()
+
+    file_name = f"task2_50p_plot_{findperf.filename}_{now_time}.png"
+    save_path = pjoin(dir, file_name) if results_dir is not None else file_name
+
+    try:
+        plotter.savefig(save_path)
+    except FileExistsError:
+        pass
+
+    plotter.close(None)
+    
+    save_path = pjoin(dir, "all_hamiltonian_circuits.txt") if results_dir is not None else "out.txt"
+    with open(save_path, "w") as text_out:
+        for i, graph in enumerate(findperf.sizes):
+            text_out.write(f"Graph size: {findperf.sizes[i]} with saturation 50 %, Hamiltionian cycles:\n")
+            text_out.write(str(cycles[i]))
