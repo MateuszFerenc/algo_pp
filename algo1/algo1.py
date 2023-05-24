@@ -4,7 +4,7 @@ import matplotlib.pyplot as plotter
 from datetime import datetime
 from sys import setrecursionlimit
 from os.path import join as pjoin
-from os import mkdir
+from os import mkdir, abort
 
 
 class SortingAlgorithms:
@@ -198,7 +198,7 @@ class DataGenerators:
         return nums
 
     @staticmethod
-    def declining_list(amount, _max, diff):
+    def descending_list(amount, _max, diff):
         assert amount > 1
         assert type(amount) is int
         assert type(_max) is int
@@ -278,37 +278,42 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
             print("ascending list")
             self.parameters.append(input("Enter minimum value\n"))
             self.parameters.append(input("Enter maximum difference between next numbers\n"))
-            print("declining list")
+            print("descending list")
             self.parameters.append(input("Enter maximum value\n"))
             self.parameters.append(input("Enter maximum difference between next numbers\n"))
             print("constant list")
             self.parameters.append(input("Enter value\n"))
 
     def process_parameters(self):
-        for idx in range(int(self.parameters[0])):
-            idx *= 8
-            _min, _max = map(int, self.parameters[2 + idx].split(", "))
-            self.rnd.append(self.random_list(int(self.parameters[1 + idx]), _min, _max, self.parameters[3 + idx]))
-            self.asc.append(self.ascending_list(int(self.parameters[1 + idx]), int(self.parameters[4 + idx]),
-                                                int(self.parameters[5 + idx])))
-            self.dec.append(self.declining_list(int(self.parameters[1 + idx]), int(self.parameters[6 + idx]),
-                                                int(self.parameters[7 + idx])))
-            self.con.append(self.constant_list(int(self.parameters[1 + idx]), int(self.parameters[8 + idx])))
-            self.ashape.append(self.a_shape_list(int(self.parameters[1 + idx])))
-            self.vshape.append(self.v_shape_list(int(self.parameters[1 + idx])))
-            self.dataset_sizes.append(int(self.parameters[1 + idx]))
+        if len(self.parameters):
+            for idx in range(int(self.parameters[0])):
+                idx *= 8
+                _min, _max = map(int, self.parameters[2 + idx].split(", "))
+                self.rnd.append(self.random_list(int(self.parameters[1 + idx]), _min, _max, self.parameters[3 + idx]))
+                self.asc.append(self.ascending_list(int(self.parameters[1 + idx]), int(self.parameters[4 + idx]),
+                                                    int(self.parameters[5 + idx])))
+                self.dec.append(self.descending_list(int(self.parameters[1 + idx]), int(self.parameters[6 + idx]),
+                                                    int(self.parameters[7 + idx])))
+                self.con.append(self.constant_list(int(self.parameters[1 + idx]), int(self.parameters[8 + idx])))
+                self.ashape.append(self.a_shape_list(int(self.parameters[1 + idx])))
+                self.vshape.append(self.v_shape_list(int(self.parameters[1 + idx])))
+                self.dataset_sizes.append(int(self.parameters[1 + idx]))
+        else:
+            print("Before processing parameters, you should load the data.\t\tAborting...")
+            abort()
+            
 
     def measure_performance(self, sorting_algo: str):
         assert type(sorting_algo) is str
         assert sorting_algo in ("insertion_sort", "selection_sort", "heapsort", "merge_sort") 
         perf = []
-        ds = ("random", "ascending", "declining", "constant", "vshape")
+        ds = ("random", "ascending", "descending", "constant", "vshape")
         for i, d in enumerate((self.rnd, self.asc, self.dec, self.con, self.vshape)):
             avg_time_ms = []
             for dataset in range(int(self.parameters[0])):
                 time = 0
+                self.indata = d[dataset]
                 for _ in range(5):
-                    self.indata = d[dataset]
                     text = f"Performing {sorting_algo} measurements - round: {_} - dataset: {dataset} of {ds[i]} data type"
                     print(end='\x1b[2K')
                     print(text, end="\r")
@@ -330,14 +335,14 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
         perf = []
         for dataset in range(int(self.parameters[0])):
             time = 0
-            for _ in range(5):
-                self.indata = self.ashape[dataset]
-                if pivot == "right":
+            self.indata = self.ashape[dataset]
+            if pivot == "right":
                     p = len(self.indata)
-                elif pivot == "middle":
-                    p = len(self.indata) // 2
-                else:
-                    p = randrange(0, len(self.indata) + 1)
+            elif pivot == "middle":
+                p = len(self.indata) // 2
+            else:
+                p = randrange(0, len(self.indata) + 1)
+            for _ in range(5):
                 text = f"Performing {sorting_algo} measurements - dataset: {dataset} of ashape data type - round: {_} - pivot={p} {pivot}"
                 print(end='\x1b[2K')
                 print(text, end="\r")
@@ -352,17 +357,17 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
 
 if __name__ == "__main__":
-    results_dir = "results"
+    results_dir = "test"
     try:
         mkdir(results_dir)
     except FileExistsError:
         pass
     sortperf = SortPerformance()
-    sortperf.load_param_from_file("algo1")
+    """sortperf.load_param_from_file("algo1")
     # sortperf.load_param_from_file("algo1_bigdata")
-    sortperf.process_parameters()
+    sortperf.process_parameters()"""
     now_time = datetime.now()
-
+    """
     IS_perf = sortperf.measure_performance("insertion_sort")
     SS_perf = sortperf.measure_performance("selection_sort")
     HS_perf = sortperf.measure_performance("heapsort")
@@ -370,7 +375,7 @@ if __name__ == "__main__":
 
     plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[0]), color="r", label="random")
     plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[1]), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[2]), color="b", label="descending")
     plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[3]), color="k", label="constant")
     plotter.plot(list(sortperf.dataset_sizes), list(IS_perf[4]), color="c", label="V-shaped")
 
@@ -393,7 +398,7 @@ if __name__ == "__main__":
 
     plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[0]), color="r", label="random")
     plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[1]), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[2]), color="b", label="descending")
     plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[3]), color="k", label="constant")
     plotter.plot(list(sortperf.dataset_sizes), list(SS_perf[4]), color="c", label="V-shaped")
 
@@ -416,7 +421,7 @@ if __name__ == "__main__":
 
     plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[0]), color="r", label="random")
     plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[1]), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[2]), color="b", label="descending")
     plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[3]), color="k", label="constant")
     plotter.plot(list(sortperf.dataset_sizes), list(HS_perf[4]), color="c", label="V-shaped")
 
@@ -439,7 +444,7 @@ if __name__ == "__main__":
 
     plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[0]), color="r", label="random")
     plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[1]), color="g", label="ascending")
-    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[2]), color="b", label="declining")
+    plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[2]), color="b", label="descending")
     plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[3]), color="k", label="constant")
     plotter.plot(list(sortperf.dataset_sizes), list(MS_perf[4]), color="c", label="V-shaped")
 
@@ -458,12 +463,12 @@ if __name__ == "__main__":
     except FileExistsError:
         pass
 
-    plotter.close(None)
+    plotter.close(None)"""
 
     sortperf.load_param_from_file("algo1_QS_DATA")
     sortperf.process_parameters()
 
-    right_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="right")
+    """right_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="right")
 
     mid_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="middle")
 
@@ -488,7 +493,7 @@ if __name__ == "__main__":
     except FileExistsError:
         pass
 
-    plotter.close(None)
+    plotter.close(None)"""
 
     setrecursionlimit(10000)
 
