@@ -10,7 +10,10 @@ from os import mkdir, abort
 
 class DataGenerators:
     @staticmethod
-    def generate_mixed_circle_incidence_list(num_vertices):
+    def generate_mixed_circle_adjacency_list(num_vertices):
+        assert type(num_vertices) is int
+        assert num_vertices > 3
+
         # get starting vertice
         last = random.randint(0, num_vertices - 1)
         first = last
@@ -18,62 +21,114 @@ class DataGenerators:
         # create list of available vertices and remove first
         vertices_range = list(range(0, num_vertices))
         vertices_range.remove(last)
-        incidence_list = []
+        adjacency_list = []
         while len(vertices_range):
             # chose random vertice and remove its occurance from available vertices list
             random_vertice = random.choice(vertices_range)
             vertices_range.remove(random_vertice)
-            # create incidence between vertices
-            incidence_list.append((last, random_vertice))
+            # create adjacency between vertices
+            adjacency_list.append((last, random_vertice))
             last = random_vertice
 
-        # create incidence between last and first vertice
-        incidence_list.append((last, first))
+        # create adjacency between last and first vertice
+        adjacency_list.append((last, first))
 
-        # create full incidence list by reversing original list and appending new incidences
-        full_incidence_list = []
-        full_incidence_list.extend(incidence_list)
-        for vertice in incidence_list:
-            full_incidence_list.append((vertice[1], vertice[0]))
+        # create full adjacency list by reversing original list and appending new adjacencies
+        full_adjacency_list = []
+        full_adjacency_list.extend(adjacency_list)
+        for vertice in adjacency_list:
+            full_adjacency_list.append((vertice[1], vertice[0]))
             
-        return full_incidence_list
+        return full_adjacency_list
     
     @staticmethod
-    def convert_incidence_list_into_matrix(incidence_list, num_vertices):
-        # convert incidence list into incidence matrix
-        incidence_matrix = np.zeros((num_vertices, num_vertices), dtype=int)
-        for edge in incidence_list:
-            incidence_matrix[edge[0]][edge[1]] = 1
-            
-        return incidence_matrix
-            
-    @staticmethod
-    def generate_mixed_connected_circle_graph(num_vertices, saturation_percentage):
-        incidence_matrix = DataGenerators.convert_incidence_list_into_matrix(DataGenerators.generate_mixed_circle_incidence_list(num_vertices), num_vertices=num_vertices)
+    def convert_adjacency_list_into_matrix(adjacency_list, num_vertices):
+        assert type(num_vertices) is int
+        assert num_vertices > 3
 
+        # convert adjacency list into adjacency matrix
+        adjacency_matrix = np.zeros((num_vertices, num_vertices), dtype=int)
+        for edge in adjacency_list:
+            adjacency_matrix[edge[0]][edge[1]] = 1
+            
+        return adjacency_matrix
+    
+    @staticmethod
+    def add_vertices_by_saturation(imatrix, num_vertices, saturation_percentage):
+        assert type(num_vertices) is int
+        assert num_vertices > 3
+        assert type(saturation_percentage) is int
+        assert 0 <= saturation_percentage <= 100
+
+        adjacency_matrix = np.copy(imatrix)
         max_edges = int((num_vertices * (num_vertices - 1)) / 2)
         current_saturation = round((num_vertices / max_edges) * 100)
+        
+        #print(f"current_saturation: {current_saturation}, saturation_percentage: {saturation_percentage}")
 
         # if current saturation is lower than expected add edges
         if current_saturation < saturation_percentage:
             # calculate how many edges to add
-            new_edges = int(((saturation_percentage / 100) - current_saturation) * ((num_vertices * (num_vertices - 1)) / 2))
-
-            vertices_grades = np.sum(incidence_matrix, axis=1)
-            minimum_vertices_grades = num_vertices * 2
+            new_edges = int((((saturation_percentage - current_saturation) / 100)) * ((num_vertices * (num_vertices - 1)) / 2)) + 1
+            #print(f"new_edges: {new_edges}")
 
             for _ in range(new_edges):
-                vertice0 = random.randint(0, num_vertices - 1)
-                vertice1 = random.randint(0, num_vertices - 1)
+                vertices_grades = np.sum(adjacency_matrix, axis=1)
+                #print(f"vertices_grades: {vertices_grades}")
+                even_vertices = list(range(0, num_vertices))
+                #even_vertices = np.ones((num_vertices, ), dtype=int)
+                odd_grades = []
+                for vertice, grade in enumerate(vertices_grades):
+                    if grade == (num_vertices - 1):
+                        even_vertices.remove(vertice)
+                        continue
+                    if grade % 2 != 0:
+                        odd_grades.append(vertice)
+                        even_vertices.remove(vertice)
 
-				# avoid connecting yet connected vertices
-                if incidence_matrix[vertice0, vertice1] == 1 or vertice0 == vertice1 or vertices_grades[vertice0] == minimum_vertices_grades or vertices_grades[vertice1] == minimum_vertices_grades:
-                    continue
+                #print(f"edge: {_}, even_vertices: {even_vertices}, odd_grades: {odd_grades}")
+                
+                if len(odd_grades):
+                    vertice0 = random.choice(odd_grades)
+                else:
+                    vertice0 = random.choice(even_vertices)
+                    even_vertices.remove(vertice0)
+                #print(f"vertice0: {vertice0}")
+                for vertice, connected in enumerate(adjacency_matrix[vertice0]):
+                    if connected and vertice in even_vertices:
+                        even_vertices.remove(vertice)
 
-                incidence_matrix[vertice0, vertice1] = 1
-                incidence_matrix[vertice1, vertice0] = 1
+                #print(f"even_vertices: {even_vertices}")
+                if len(even_vertices):
+                    vertice1 = random.choice(even_vertices)
+                else:
+                    if vertice0 in odd_grades:
+                        odd_grades.remove(vertice0)
+                    vertice1 = random.choice(odd_grades)
 
-        return incidence_matrix
+                #print(f"vertice0: {vertice0}, vertice1: {vertice1}, even_vertices: {even_vertices}")
+
+                adjacency_matrix[vertice0, vertice1] = 1
+                adjacency_matrix[vertice1, vertice0] = 1
+
+        return adjacency_matrix
+            
+    @staticmethod
+    def generate_mixed_connected_circle_graph(num_vertices, saturation_percentage):
+        assert type(num_vertices) is int
+        assert num_vertices > 3
+        assert type(saturation_percentage) is int
+        assert 0 <= saturation_percentage <= 100
+
+        adjacency_list = DataGenerators.generate_mixed_circle_adjacency_list(num_vertices)
+        adjacency_matrix = DataGenerators.convert_adjacency_list_into_matrix(adjacency_list, num_vertices=num_vertices)
+        return DataGenerators.add_vertices_by_saturation(adjacency_matrix, num_vertices, saturation_percentage)
+        
+    
+    @staticmethod
+    def get_vertices_grades(imatrix):
+        vertices_grades = np.sum(imatrix, axis=1)
+        return vertices_grades
 
 
 class Algorithms:
@@ -88,27 +143,22 @@ class Algorithms:
             print("Graph is not connected.")
             return cycle
 
-        start_vertice = Algorithms.find_start_vertice(imatrix)
-        current_vertice = start_vertice
-
-        while True:
-            cycle.append(current_vertice)
-
-            if Algorithms.find_next_vertice(imatrix, current_vertice) == -1:
-                break
-
-            next_vertice = Algorithms.find_next_vertice(imatrix, current_vertice)
-
-            imatrix[current_vertice][next_vertice] -= 1
-            imatrix[next_vertice][current_vertice] -= 1
-
-            current_vertice = next_vertice
-
-        for i in range(num_vertices):
-            for j in range(num_vertices):
-                if imatrix[i][j] != 0:
-                    print("No Euler cycle.")
-                    return []
+        stack = []
+        cur = random.randrange(0, num_vertices)
+ 
+        while (len(stack) > 0 or sum(imatrix[cur])!= 0):
+            if (sum(imatrix[cur]) == 0):
+                cycle.append(cur)
+                cur = stack[-1]
+                del stack[-1]
+            else:
+                for i in range(num_vertices):
+                    if (imatrix[cur][i] == 1):
+                        stack.append(cur)
+                        imatrix[cur][i] = 0
+                        imatrix[i][cur] = 0
+                        cur = i
+                        break
 
         return cycle
 
@@ -132,32 +182,8 @@ class Algorithms:
         return all(visited)
 
     @staticmethod
-    def find_start_vertice(imatrix):
-        num_vertices = len(imatrix)
-        degree = [0] * num_vertices
-
-        for i in range(num_vertices):
-            for j in range(num_vertices):
-                degree[i] += imatrix[i][j]
-
-        for i in range(num_vertices):
-            if degree[i] % 2 != 0:
-                return i
-
-        return 0
-
-    @staticmethod
-    def find_next_vertice(imatrix, current_vertice):
-        num_vertices = len(imatrix)
-
-        for i in range(num_vertices):
-            if imatrix[current_vertice][i] > 0:
-                return i
-
-        return -1
-
-    @staticmethod
-    def find_hamiltonian_cycle(m):
+    #def find_hamiltonian_cycle(m):
+    def t():
         def find_hamiltonian_cycle_recursive(imatrix, current_vertice, visited, cycle):
             num_vertices = len(imatrix)
 
@@ -198,7 +224,7 @@ class Algorithms:
             return []
         
     @staticmethod
-    def find_all_hamiltonian_cycles(m):
+    def find_hamiltonian_cycles(m):
         def search(vertice, circuit):
             nonlocal hamiltonian_cycles
 
@@ -215,8 +241,8 @@ class Algorithms:
         hamiltonian_cycles = []
         vertices_num = imatrix.shape[1]
 
-        for wierzcholek_startowy in range(vertices_num):
-            search(wierzcholek_startowy, [wierzcholek_startowy])
+        for start_vertice in range(vertices_num):
+            search(start_vertice, [start_vertice])
 
         return hamiltonian_cycles
         
@@ -256,11 +282,11 @@ class FindingPerformance(DataGenerators, Algorithms):
     def Task1(self, saturation):
         assert type(saturation) is int
         assert 0 < saturation <= 100
-        perf = {"find_euler_cycle" : [], "find_hamiltonian_cycle": []}
+        perf = {"find_euler_cycle" : [], "find_hamiltonian_cycles": []}
         for i in range(int(self.parameters[0])):
             size = self.sizes[i]
             circle_graph = DataGenerators.generate_mixed_connected_circle_graph(size, saturation)
-            for algo in ("find_euler_cycle", "find_hamiltonian_cycle"):
+            for algo in ("find_euler_cycle", "find_hamiltonian_cycles"):
                 time = 0
                 for _ in range(5):
                     text = f"Performing {algo} measurements - round: {_} - graph size: {size} with {saturation} % of saturation"
@@ -290,7 +316,7 @@ class FindingPerformance(DataGenerators, Algorithms):
                 print(end='\x1b[2K')
                 print(text, end="\r")
                 tstart = perf_counter_ns()
-                empty = Algorithms.find_all_hamiltonian_cycles(circle_graph)
+                empty = Algorithms.find_hamiltonian_cycles(circle_graph)
                 tstop = perf_counter_ns()
                 time += (tstop - tstart)
             avg = round(time / 5000000)
