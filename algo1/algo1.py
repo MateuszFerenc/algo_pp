@@ -357,17 +357,17 @@ class SortPerformance(SortingAlgorithms, DataGenerators):
 
 
 if __name__ == "__main__":
-    results_dir = "test"
+    results_dir = "results"
     try:
         mkdir(results_dir)
     except FileExistsError:
         pass
     sortperf = SortPerformance()
-    """sortperf.load_param_from_file("algo1")
+    sortperf.load_param_from_file("algo1")
     # sortperf.load_param_from_file("algo1_bigdata")
-    sortperf.process_parameters()"""
+    sortperf.process_parameters()
     now_time = datetime.now()
-    """
+    
     IS_perf = sortperf.measure_performance("insertion_sort")
     SS_perf = sortperf.measure_performance("selection_sort")
     HS_perf = sortperf.measure_performance("heapsort")
@@ -463,12 +463,12 @@ if __name__ == "__main__":
     except FileExistsError:
         pass
 
-    plotter.close(None)"""
+    plotter.close(None)
 
     sortperf.load_param_from_file("algo1_QS_DATA")
     sortperf.process_parameters()
 
-    """right_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="right")
+    right_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="right")
 
     mid_pivot = sortperf.measure_quicksort_performance("quicksort_iter", pivot="middle")
 
@@ -493,7 +493,7 @@ if __name__ == "__main__":
     except FileExistsError:
         pass
 
-    plotter.close(None)"""
+    plotter.close(None)
 
     setrecursionlimit(10000)
 

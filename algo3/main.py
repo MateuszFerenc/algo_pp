@@ -212,7 +212,7 @@ class Algorithms:
             if len(path) == n:
                 # Znaleziono cykl Hamiltona
                 if adj_matrix[v][start] == 1:
-                    cycles.append(path[:])
+                    cycles.append(path[:] + [start])
     
             for i in range(n):
                 if adj_matrix[v][i] == 1 and not visited[i]:
@@ -222,10 +222,37 @@ class Algorithms:
             visited[v] = False
             path.pop()
     
-        for vertex in range(n):
-            dfs(vertex, vertex, [])
+        dfs(0, 0, [])
     
         return cycles
+    
+    def find_hamiltonian_cycles(adjacency_matrix, start_vertex):
+        num_vertices = len(adjacency_matrix)
+        path = [None] * (num_vertices + 1)
+        path[0] = path[-1] = start_vertex
+        visited = [False] * num_vertices
+        visited[start_vertex] = True
+        cycles = []
+    
+        def extend_path(vertex, position):
+            if position == num_vertices:
+                if adjacency_matrix[vertex][start_vertex] == 1:
+                    cycles.append(path[:])
+                return
+    
+            for next_vertex in range(num_vertices):
+                if (
+                    adjacency_matrix[vertex][next_vertex] == 1
+                    and not visited[next_vertex]
+                ):
+                    visited[next_vertex] = True
+                    path[position] = next_vertex
+                    extend_path(next_vertex, position + 1)
+                    visited[next_vertex] = False
+    
+        extend_path(start_vertex, 1)
+        return cycles
+
 
         
 class FindingPerformance(DataGenerators, Algorithms):
